@@ -1,0 +1,55 @@
+.checkout-page {
+  padding: 16px;
+}
+
+.order-summary {
+  background: var(--tg-theme-secondary-bg-color, #f9f9f9);
+  padding: 16px;
+  border-radius: 12px;
+  margin: 16px 0;
+  text-align: center;
+}
+
+.checkout-form {
+  margin-top: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--tg-theme-hint-color, #ddd);
+  border-radius: 8px;
+  background: var(--tg-theme-bg-color, #fff);
+  color: var(--tg-theme-text-color, #000);
+  font-size: 16px;
+}
+
+.submit-btn {
+  width: 100%;
+  background: var(--tg-theme-button-color, #2481cc);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

@@ -1,0 +1,24 @@
+.success-page {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.success-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+
+.success-page h1 {
+  margin-bottom: 20px;
+  color: var(--tg-theme-text-color, #000);
+}
+
+.success-page p {
+  margin-bottom: 12px;
+  color: var(--tg-theme-hint-color, #666);
+}
+
+.success-message {
+  margin-top: 30px;
+  font-size: 14px;
+}
