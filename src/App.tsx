@@ -1,4 +1,4 @@
-import React from 'react';
+// React importini o'chirish (React 17+ da kerak emas)
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { CatalogPage } from './pages/CatalogPage';

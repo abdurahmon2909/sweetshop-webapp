@@ -13,7 +13,7 @@ interface CartStore {
   clearCart: (telegramId: number) => Promise<void>;
 }
 
-export const useCartStore = create<CartStore>((set, get) => ({
+export const useCartStore = create<CartStore>((set) => ({  // 'get' ni olib tashlandi
   cart: null,
   isLoading: false,
   error: null,
