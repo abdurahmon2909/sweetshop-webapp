@@ -1,7 +1,8 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { catalogApi } from '../api/catalog';
+import { Category, Product } from '../types';
 import { useCartStore } from '../store/cartStore';
-import './CartPage.css';
+import './CatalogPage.css';
 
 declare global {
   interface Window {
@@ -9,114 +10,104 @@ declare global {
   }
 }
 
-export const CartPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { cart, updateItem, removeItem, clearCart } = useCartStore();
-  const tg = window.Telegram?.WebApp;
+export const CatalogPage: React.FC = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { addItem } = useCartStore();
 
-  const handleUpdateQty = async (itemId: number, newQty: number) => {
-    const user = tg?.initDataUnsafe?.user;
-    if (user?.id && cart) {
-      if (newQty <= 0) {
-        await removeItem(itemId, user.id);
-      } else {
-        await updateItem(itemId, user.id, newQty);
-      }
+  useEffect(() => {
+    loadData();
+  }, [selectedCategory]);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [categoriesData, productsData] = await Promise.all([
+        catalogApi.getCategories(),
+        catalogApi.getProducts(selectedCategory || undefined),
+      ]);
+      setCategories(categoriesData.filter(c => c.is_active));
+      setProducts(productsData.filter(p => p.is_active));
+    } catch (error) {
+      console.error('Error loading catalog:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleClearCart = async () => {
+  const handleAddToCart = async (product: Product) => {
+    const tg = window.Telegram?.WebApp;
     const user = tg?.initDataUnsafe?.user;
+
     if (user?.id) {
+      await addItem(user.id, product.id, 1);
+      tg?.HapticFeedback.impactOccurred('light');
       tg?.showPopup({
-        title: 'Savatni tozalash',
-        message: 'Hamma mahsulotlar o\'chiriladi. Davom etasizmi?',
-        buttons: [
-          { type: 'cancel', text: 'Bekor qilish' },
-          { type: 'default', text: 'Tozalash' },
-        ],
-        callback: async (buttonId: string) => {
-          if (buttonId === 'default') {
-            await clearCart(user.id);
-          }
-        },
+        title: '✅ Qo\'shildi',
+        message: `${product.name} savatga qo'shildi`,
+        buttons: [{ type: 'ok' }],
       });
     }
   };
 
-  const handleCheckout = () => {
-    navigate('/checkout');
-  };
-
-  if (!cart || cart.items.length === 0) {
-    return (
-      <div className="empty-cart">
-        <div className="empty-cart-icon">🛒</div>
-        <h2>Savat bo'sh</h2>
-        <p>Mahsulotlarni qo'shing va buyurtma bering</p>
-        <button className="go-to-menu-btn" onClick={() => navigate('/')}>
-          Menu ga o'tish
-        </button>
-      </div>
-    );
+  if (loading) {
+    return <div className="loading">Loading...</div>;
   }
 
   return (
-    <div className="cart-page">
-      <h1>Savat</h1>
+    <div className="catalog-page">
+      <div className="categories">
+        <button
+          className={`category-chip ${selectedCategory === null ? 'active' : ''}`}
+          onClick={() => setSelectedCategory(null)}
+        >
+          🍽️ Hammasi
+        </button>
+        {categories.map(cat => (
+          <button
+            key={cat.id}
+            className={`category-chip ${selectedCategory === cat.id ? 'active' : ''}`}
+            onClick={() => setSelectedCategory(cat.id)}
+          >
+            {cat.emoji} {cat.name}
+          </button>
+        ))}
+      </div>
 
-      <div className="cart-items">
-        {cart.items.map(item => (
-          <div key={item.id} className="cart-item">
-            <div className="cart-item-info">
-              <div className="cart-item-name">{item.name}</div>
-              <div className="cart-item-price">{item.price.toLocaleString()} so'm</div>
-            </div>
-
-            <div className="cart-item-actions">
-              <button
-                className="qty-btn"
-                onClick={() => handleUpdateQty(item.id, item.qty - 1)}
-              >
-                -
-              </button>
-              <span className="qty">{item.qty}</span>
-              <button
-                className="qty-btn"
-                onClick={() => handleUpdateQty(item.id, item.qty + 1)}
-              >
-                +
-              </button>
-              <button
-                className="remove-btn"
-                onClick={() => handleUpdateQty(item.id, 0)}
-              >
-                🗑️
-              </button>
-            </div>
-
-            <div className="cart-item-total">
-              {(item.price * item.qty).toLocaleString()} so'm
+      <div className="products-grid">
+        {products.map(product => (
+          <div key={product.id} className="product-card">
+            {product.badge && (
+              <span className="product-badge">{product.badge}</span>
+            )}
+            {product.image_url ? (
+              <img src={product.image_url} alt={product.name} className="product-image" />
+            ) : (
+              <div className="product-image-placeholder">🍰</div>
+            )}
+            <div className="product-info">
+              <h3 className="product-name">{product.name}</h3>
+              {product.weight && (
+                <span className="product-weight">{product.weight}</span>
+              )}
+              <p className="product-description">{product.description}</p>
+              <div className="product-footer">
+                <span className="product-price">{product.price.toLocaleString()} so'm</span>
+                <button
+                  className="add-to-cart-btn"
+                  onClick={() => handleAddToCart(product)}
+                >
+                  + Savatga
+                </button>
+              </div>
             </div>
           </div>
         ))}
       </div>
-
-      <div className="cart-summary">
-        <div className="summary-row">
-          <span>Jami:</span>
-          <span className="total-amount">{cart.total_amount.toLocaleString()} so'm</span>
-        </div>
-
-        <div className="cart-actions">
-          <button className="clear-cart-btn" onClick={handleClearCart}>
-            Savatni tozalash
-          </button>
-          <button className="checkout-btn" onClick={handleCheckout}>
-            Buyurtma berish →
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
+
+export default CatalogPage;

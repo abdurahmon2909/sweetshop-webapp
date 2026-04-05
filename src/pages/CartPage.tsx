@@ -119,3 +119,4 @@ export const CartPage: React.FC = () => {
     </div>
   );
 };
+export default CartPage;
